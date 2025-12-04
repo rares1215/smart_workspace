@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import CustomUser
+from .models import CustomUser,DocumentUpload
+from .utils.get_text_from_model import extract_text_from_model,hash_text
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
@@ -45,3 +46,17 @@ class CustomUserSerializer(serializers.ModelSerializer):
         validated_data.pop('password2')
         user = CustomUser.objects.create_user(**validated_data)
         return user
+    
+
+class DocumentUploadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DocumentUpload
+        fields = [
+            'id',
+            'user',
+            'title',
+            'doc_file',
+            'created_at',
+            'text',
+        ]
+        read_only_fields = ['user','text','created_at']
