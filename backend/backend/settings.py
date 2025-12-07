@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'api',
+    'pgvector.django',
 
     # default aps
     'django.contrib.admin',
