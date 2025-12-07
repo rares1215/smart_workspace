@@ -60,3 +60,21 @@ class DocumentUploadSerializer(serializers.ModelSerializer):
             'text',
         ]
         read_only_fields = ['user','text','created_at']
+
+    
+    #### validating the size of the file to be lesser than 5MB
+    def validate_doc_file(self,value):
+        MAX_SIZE = 5*1024*1024
+        if value.size > MAX_SIZE:
+            raise serializers.ValidationError("The file is to big.")
+        return value
+    
+    def validate(self,attrs):
+        #### checking if the pdf is empty or corrupt ####
+        curr_file = attrs['doc_file']
+        curr_text = extract_text_from_model(curr_file)
+
+        if not curr_text:
+            raise serializers.ValidationError({'doc_file':'The pdf is corrupt or it can t be read'})
+        
+        return attrs
