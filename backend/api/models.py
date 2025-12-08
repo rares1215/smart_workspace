@@ -24,5 +24,5 @@ class DocumentEmbedding(models.Model):
     document = models.ForeignKey(DocumentUpload,on_delete=models.CASCADE)
     chunk_index = models.IntegerField()
     chunk_text = models.TextField()
-    embedding = VectorField(dimensions=1024)
+    embedding = VectorField(dimensions=384)
     created_at = models.DateTimeField(auto_now_add=True)

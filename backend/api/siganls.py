@@ -9,27 +9,31 @@ import os
 
 
 @receiver(post_save,sender=DocumentUpload)
-def save_text_on_upload(sender,instance,created, **kwargs):
+def save_text_and_embeddings(sender,instance,created, **kwargs):
     if not created:
         return
     
     text = extract_text(instance.doc_file.path)
     instance.text = text
     DocumentUpload.objects.filter(id=instance.id).update(text=text)
-
     chunks = chunk_text(text)
     vectors = generate_embedding_for_chunks(chunks)
 
     embeddings_to_make = []
-    for index, (chunk,vector) in enumerate(zip(chunks,vectors)):
+    for index, (chunk, vector) in enumerate(zip(chunks, vectors)):
+        if vector is None:
+            print(f"Skipping chunk {index}: embedding is None")
+            continue
+
         embeddings_to_make.append(
             DocumentEmbedding(
                 document=instance,
-                chunk_index = index,
-                chunk_text = chunk,
-                embedding = vector,
+                chunk_index=index,
+                chunk_text=chunk,
+                embedding=vector,
             )
         )
+
     DocumentEmbedding.objects.bulk_create(embeddings_to_make)
 
 
