@@ -78,3 +78,6 @@ class DocumentUploadSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({'doc_file':'The pdf is corrupt or it can t be read'})
         
         return attrs
+    
+class RagQuery(serializers.Serializer):
+    query = serializers.CharField(max_length=500)

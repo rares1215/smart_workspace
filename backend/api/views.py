@@ -1,10 +1,12 @@
 from django.shortcuts import render
 from .models import CustomUser,DocumentUpload
-from .serializers import CustomUserSerializer,DocumentUploadSerializer
-from rest_framework import generics,viewsets
+from .serializers import CustomUserSerializer,DocumentUploadSerializer,RagQuery
+from rest_framework import generics,status
 from rest_framework.permissions import AllowAny,IsAuthenticated
 from rest_framework.parsers import MultiPartParser,FormParser
-# Create your views here.
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from .services.rag import rag_answer
 
 
 
@@ -28,3 +30,20 @@ class FileUploadView(generics.CreateAPIView):
     def perform_create(self, serializer):
         user = self.request.user
         return serializer.save(user=user)
+
+
+#### creating the RAG response end-point
+class RAGView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, document_id):
+        serializer = RagQuery(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        query = serializer.validated_data["query"]
+
+        result = rag_answer(document_id=document_id, query=query)
+
+        return Response(result, status=status.HTTP_200_OK)

@@ -1,7 +1,6 @@
 from django.dispatch import receiver
 from django.db.models.signals import post_save,post_delete
 from .models import DocumentUpload,DocumentEmbedding
-from .utils.analyze_text_with_llm import analyze_text
 from .utils.extract_text_from_pdf import extract_text
 from .utils.chunk_text import chunk_text
 from .utils.generate_embedings import generate_embedding_for_chunks
@@ -35,9 +34,6 @@ def save_text_and_embeddings(sender,instance,created, **kwargs):
         )
 
     DocumentEmbedding.objects.bulk_create(embeddings_to_make)
-
-
-
 
 @receiver(post_delete, sender=DocumentUpload)
 def delete_file_after_deleting_model(sender,instance,**kwargs):
