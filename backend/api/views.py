@@ -1,7 +1,6 @@
-from django.shortcuts import render
 from .models import CustomUser,DocumentUpload
 from .serializers import CustomUserSerializer,DocumentUploadSerializer,RagQuery
-from rest_framework import generics,status
+from rest_framework import generics,status,viewsets
 from rest_framework.permissions import AllowAny,IsAuthenticated
 from rest_framework.parsers import MultiPartParser,FormParser
 from rest_framework.views import APIView
@@ -19,18 +18,17 @@ class RegisterFormViewSet(generics.CreateAPIView):
 
 
 
-###### Creating the Post Document View
-class FileUploadView(generics.CreateAPIView):
-    queryset = DocumentUpload.objects.all()
+###### the viewset for the Document model
+class DocumentViewSet(viewsets.ModelViewSet):
     serializer_class = DocumentUploadSerializer
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser,FormParser]
 
-
+    def get_queryset(self):
+        return DocumentUpload.objects.filter(user=self.request.user)    
     def perform_create(self, serializer):
         user = self.request.user
         return serializer.save(user=user)
-
 
 #### creating the RAG response end-point
 class RAGView(APIView):
