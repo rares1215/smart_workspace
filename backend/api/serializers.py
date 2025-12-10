@@ -53,13 +53,11 @@ class DocumentUploadSerializer(serializers.ModelSerializer):
         model = DocumentUpload
         fields = [
             'id',
-            'user',
             'title',
-            'doc_file',
             'created_at',
-            'text',
+            'content',
         ]
-        read_only_fields = ['user','text','created_at']
+        read_only_fields = ['content','created_at']
 
     
     #### validating the size of the file to be lesser than 5MB

@@ -6,6 +6,7 @@ from rest_framework.parsers import MultiPartParser,FormParser
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .services.rag import rag_answer
+from .throttles import DocumentUploadThrotleBurst,DocumentUploadThrotleSustained,QueryPostThrotleBurst,QueryPostThrotleSustained
 
 
 
@@ -23,6 +24,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
     serializer_class = DocumentUploadSerializer
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser,FormParser]
+    throttle_classes = [DocumentUploadThrotleBurst,DocumentUploadThrotleSustained]
 
     def get_queryset(self):
         return DocumentUpload.objects.filter(user=self.request.user)    
@@ -33,6 +35,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
 #### creating the RAG response end-point
 class RAGChatView(APIView):
     permission_classes = [IsAuthenticated]
+    throttle_classes = [QueryPostThrotleSustained,QueryPostThrotleBurst]
 
     def post(self, request, document_id):
         # 1. Validate document ownership
@@ -53,7 +56,7 @@ class RAGChatView(APIView):
         )
 
         # 4. Return full result (clean, no nesting)
-        return Response(result, status=200)
+        return Response({"answer": result["answer"]}, status=200)
 
 class ChatHistoryView(APIView):
     permission_classes = [IsAuthenticated]
