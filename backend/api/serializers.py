@@ -53,11 +53,13 @@ class DocumentUploadSerializer(serializers.ModelSerializer):
         model = DocumentUpload
         fields = [
             'id',
+            'user',
             'title',
+            'doc_file',
             'created_at',
-            'content',
+            'text',
         ]
-        read_only_fields = ['content','created_at']
+        read_only_fields = ['user','text','created_at']
 
     
     #### validating the size of the file to be lesser than 5MB
@@ -82,15 +84,14 @@ class RagQuery(serializers.Serializer):
 
 
 
+# serializers.py
 class ChatMessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChatMessage
         fields = [
             "id",
-            "document",
-            "user",
             "role",
             "content",
             "created_at",
         ]
-        read_only_fields = ["user", "role", "document", "created_at"]
+        read_only_fields = ["role", "created_at"]
