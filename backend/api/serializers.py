@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import CustomUser,DocumentUpload
+from .models import CustomUser,DocumentUpload,ChatMessage
 from .utils.get_text_from_model import extract_text_from_model,hash_text
 
 
@@ -81,3 +81,18 @@ class DocumentUploadSerializer(serializers.ModelSerializer):
     
 class RagQuery(serializers.Serializer):
     query = serializers.CharField(max_length=500)
+
+
+
+class ChatMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChatMessage
+        fields = [
+            "id",
+            "document",
+            "user",
+            "role",
+            "content",
+            "created_at",
+        ]
+        read_only_fields = ["user", "role", "document", "created_at"]

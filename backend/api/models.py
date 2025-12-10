@@ -26,3 +26,22 @@ class DocumentEmbedding(models.Model):
     chunk_text = models.TextField()
     embedding = VectorField(dimensions=384)
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class ChatMessage(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    document = models.ForeignKey(DocumentUpload, on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+
+    role = models.CharField(max_length=10, choices=[
+        ("user", "user"),
+        ("assistant", "assistant")
+    ])
+
+    content = models.TextField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at"]
