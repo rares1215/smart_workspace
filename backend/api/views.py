@@ -60,7 +60,7 @@ class RAGChatView(APIView):
 
 class ChatHistoryView(APIView):
     permission_classes = [IsAuthenticated]
-
+    
     def get(self, request, document_id):
         messages = ChatMessage.objects.filter(
             user=request.user,
