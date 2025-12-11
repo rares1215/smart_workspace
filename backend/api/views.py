@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .services.rag import rag_answer
 from .throttles import DocumentUploadThrotleBurst,DocumentUploadThrotleSustained,QueryPostThrotleBurst,QueryPostThrotleSustained
+from .services.cache_document import get_document_from_cache, set_document_in_cache
 
 
 
@@ -31,6 +32,22 @@ class DocumentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         user = self.request.user
         return serializer.save(user=user)
+    def retrieve(self, request, *args, **kwargs):
+        document = self.get_object()
+
+
+        cached_data = get_document_from_cache(document.id)
+
+        if cached_data:
+            print("Cached hit!")
+            return Response(cached_data)
+
+
+        serializer = self.get_serializer(document)
+
+        set_document_in_cache(document.id,serializer.data)
+
+        return Response(serializer.data)
 
 #### creating the RAG response end-point
 class RAGChatView(APIView):

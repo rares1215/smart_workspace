@@ -5,7 +5,7 @@ from .utils.extract_text_from_pdf import extract_text
 from .utils.chunk_text import chunk_text
 from .utils.generate_embedings import generate_embedding_for_chunks
 import os
-
+from django.core.cache import cache
 
 @receiver(post_save,sender=DocumentUpload)
 def save_text_and_embeddings(sender,instance,created, **kwargs):
@@ -36,7 +36,7 @@ def save_text_and_embeddings(sender,instance,created, **kwargs):
     DocumentEmbedding.objects.bulk_create(embeddings_to_make)
 
 @receiver(post_delete, sender=DocumentUpload)
-def delete_file_after_deleting_model(sender,instance,**kwargs):
+def delete_file_and_cache_after_deleting_model(sender,instance,**kwargs):
     if instance.doc_file and hasattr(instance.doc_file,'path'):
         try:
             file_path = instance.doc_file.path
@@ -45,3 +45,7 @@ def delete_file_after_deleting_model(sender,instance,**kwargs):
                 os.remove(file_path)
         except:
             print(f"Could not delete document with path:{file_path}")
+
+    ## invalidating cache after document deletion
+    cache.delete(f"document:{instance.id}")
+    print(f"[CACHE] Invalidated document:{instance.id}")
