@@ -8,6 +8,15 @@ class CustomUser(AbstractUser):
     pass
 
 
+class EmailVerification(models.Model):
+    id = models.UUIDField(primary_key=True,default=uuid.uuid4, editable=False)
+    user = models.OneToOneField(CustomUser,on_delete=models.CASCADE)
+    code_hash = models.CharField(max_length=128)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)    
+
+
 
 class DocumentUpload(models.Model):
     id = models.UUIDField(primary_key=True,default=uuid.uuid4, editable=False)

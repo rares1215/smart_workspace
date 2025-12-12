@@ -95,3 +95,16 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             "created_at",
         ]
         read_only_fields = ["role", "created_at"]
+
+
+
+
+
+### Action to verify email 
+class VerifyEmailSerializer(serializers.Serializer):
+    code = serializers.CharField(min_length=6, max_length=6)
+
+    def validate_code(self, value):
+        if not value.isdigit():
+            raise serializers.ValidationError("Verification code must contain only digits.")
+        return value

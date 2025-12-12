@@ -1,5 +1,5 @@
 from .models import CustomUser,DocumentUpload,ChatMessage
-from .serializers import CustomUserSerializer,DocumentUploadSerializer,RagQuery,ChatMessageSerializer
+from .serializers import CustomUserSerializer,DocumentUploadSerializer,RagQuery,ChatMessageSerializer,VerifyEmailSerializer
 from rest_framework import generics,status,viewsets
 from rest_framework.permissions import AllowAny,IsAuthenticated
 from rest_framework.parsers import MultiPartParser,FormParser
@@ -8,6 +8,8 @@ from rest_framework.response import Response
 from .services.rag import rag_answer
 from .throttles import DocumentUploadThrotleBurst,DocumentUploadThrotleSustained,QueryPostThrotleBurst,QueryPostThrotleSustained
 from .services.cache_document import get_document_from_cache, set_document_in_cache
+from .utils.send_mail import send_verification_email
+from .utils.verify_email import create_verification_for_user,verify_code
 
 
 
@@ -18,7 +20,49 @@ class RegisterFormViewSet(generics.CreateAPIView):
     serializer_class = CustomUserSerializer
     permission_classes = [AllowAny]
 
+    def perform_create(self, serializer):
+        user = serializer.save(is_active=False)
+        code = create_verification_for_user(user)
+        verification = send_verification_email(user.email,code)
+        return user
+    
+class VerifyEmailView(APIView):
+    permission_classes = [AllowAny]
 
+    def post(self,request,user_id):
+        serializer = VerifyEmailSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        code = serializer.validated_data['code']
+
+        user = CustomUser.objects.filter(id=user_id).first()
+        if not user:
+            return Response(
+                {"error": "Invalid verification request"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if user.is_active:
+            return Response(
+                {"message": "Account already verified"},
+                status=status.HTTP_200_OK
+            )
+        
+        is_valid = verify_code(user,code)
+        if not is_valid:
+            return Response(
+                {"error": "Invalid or expired code"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        user.is_active = True
+        user.save(update_fields=['is_active'])
+
+        
+        return Response(
+            {"message": "Email verified successfully. You can now log in."},
+            status=status.HTTP_200_OK
+        )
 
 ###### the viewset for the Document model
 class DocumentViewSet(viewsets.ModelViewSet):
