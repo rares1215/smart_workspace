@@ -6,7 +6,7 @@ from rest_framework.parsers import MultiPartParser,FormParser
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .services.rag import rag_answer
-from .throttles import DocumentUploadThrotleBurst,DocumentUploadThrotleSustained,QueryPostThrotleBurst,QueryPostThrotleSustained
+from .throttles import DocumentUploadThrotleBurst,DocumentUploadThrotleSustained,QueryPostThrotleBurst,QueryPostThrotleSustained,ResendEmailThrotleBurst,ResendEmailThrotleSustained
 from .services.cache_document import get_document_from_cache, set_document_in_cache
 from .utils.send_mail import send_verification_email
 from .utils.verify_email import create_verification_for_user,verify_code
@@ -20,12 +20,24 @@ class RegisterFormViewSet(generics.CreateAPIView):
     serializer_class = CustomUserSerializer
     permission_classes = [AllowAny]
 
-    def perform_create(self, serializer):
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
         user = serializer.save(is_active=False)
+
         code = create_verification_for_user(user)
-        verification = send_verification_email(user.email,code)
-        return user
+        send_verification_email(user.email,code)
+
+        return Response(
+            {
+                'message':'Account created succesfully, please verify your email',
+                'user_id':str(user.id),
+                'verification_required':True,
+            }
+        )
     
+### View to send the verification code in the email ###
 class VerifyEmailView(APIView):
     permission_classes = [AllowAny]
 
@@ -61,6 +73,33 @@ class VerifyEmailView(APIView):
         
         return Response(
             {"message": "Email verified successfully. You can now log in."},
+            status=status.HTTP_200_OK
+        )
+
+##### view to resend the verification code ####
+class ResendVerificationEmail(APIView):
+    permission_classes = [AllowAny]
+    throttle_classes = [ResendEmailThrotleSustained,ResendEmailThrotleBurst]
+
+    def post(self,request,user_id):
+        user = CustomUser.objects.filter(id=user_id).first()
+        if not user:
+            return Response(
+                {"error": "Invalid verification request"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if user.is_active:
+            return Response(
+                {"message": "Account already verified"},
+                status=status.HTTP_200_OK
+            )
+        
+        code = create_verification_for_user(user)
+        send_verification_email(user.email,code)
+
+        return Response(
+            {"message": "Verification code resent successfully"},
             status=status.HTTP_200_OK
         )
 

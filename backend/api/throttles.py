@@ -13,3 +13,9 @@ class QueryPostThrotleBurst(UserRateThrottle):
 
 class QueryPostThrotleSustained(UserRateThrottle):
     scope = 'query_sustained'
+
+class ResendEmailThrotleBurst(UserRateThrottle):
+    scope = 'resend_burst'
+
+class ResendEmailThrotleSustained(UserRateThrottle):
+    scope = 'resend_sustained'

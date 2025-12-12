@@ -144,6 +144,10 @@ REST_FRAMEWORK = {
         #### custom throttling for chatting ####
         'query_burst':'10/minute',
         'query_sustained':'100/day',
+
+        ##### resend email verification throttling ###
+        'resend_burst':'1/minute',
+        'resend_sustained':'10/day',
     }
 }
 
