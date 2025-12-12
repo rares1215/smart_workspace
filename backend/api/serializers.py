@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import CustomUser,DocumentUpload,ChatMessage
-from .utils.get_text_from_model import extract_text_from_model,hash_text
+from .utils.get_text_from_model import extract_text_from_model
+import string
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
@@ -16,10 +17,16 @@ class CustomUserSerializer(serializers.ModelSerializer):
         ]
         extra_kwargs = {'password':{'write_only':True}}
 
-    #### checking the password length
+    #### checking if the password is secure enough
     def validate_password(self,value):
         if len(value) < 10:
             raise serializers.ValidationError("The password is too short")
+        if not any(char in string.punctuation for char in value):
+            raise serializers.ValidationError("Password must contain atleast one special character.")
+        if not any(char in string.ascii_uppercase for char in value):
+            raise serializers.ValidationError("Password must contain atleast one upper letter.")
+        if not any(char.isdigit() for char in value):
+            raise serializers.ValidationError("Password must contain atleast one number.")
         return value
 
     ### checking if both passwords match
