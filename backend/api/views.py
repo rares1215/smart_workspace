@@ -155,7 +155,7 @@ class RAGChatView(APIView):
             query=query
         )
 
-        # 4. Return full result (clean, no nesting)
+        # 4. Return full result
         return Response({"answer": result["answer"]}, status=200)
 
 class ChatHistoryView(APIView):
