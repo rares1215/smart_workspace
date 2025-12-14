@@ -10,6 +10,9 @@ from .throttles import DocumentUploadThrotleBurst,DocumentUploadThrotleSustained
 from .services.cache_document import get_document_from_cache, set_document_in_cache
 from .utils.send_mail import send_verification_email
 from .utils.verify_email import create_verification_for_user,verify_code
+from django.contrib.auth import authenticate
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.conf import settings
 
 
 
@@ -36,6 +39,58 @@ class RegisterFormViewSet(generics.CreateAPIView):
                 'verification_required':True,
             }
         )
+
+
+#### Custom login view for jwt token in cookies ##
+class TokenView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self,request):
+        username = self.request.data.get("username")
+        password = self.request.data.get("password")
+
+        if not username or not password:
+            return Response({"error":"Username and Password required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user = authenticate(username=username,password=password)
+        if not user:
+            return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+        if not user.is_active:
+            return Response({"error": "Account not verified"}, status=status.HTTP_403_FORBIDDEN)
+        
+        refresh = RefreshToken.for_user(user)
+
+        response = Response({"message": "Login successful"}, status=status.HTTP_200_OK)
+
+        response.set_cookie(
+            "access",
+            str(refresh.access_token),
+            httponly=True,
+            secure=False, ### true when we are in prod
+            samesite="Lax",
+        )
+
+        response.set_cookie(
+            "refresh",
+            str(refresh),
+            httponly=True,
+            secure=False,
+            samesite="Lax",
+        )
+
+        return response
+    
+
+### custom logout view for cookies
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        response = Response({"message": "Logged out"}, status=status.HTTP_200_OK)
+        response.delete_cookie("access")
+        response.delete_cookie("refresh")
+        return response
+
     
 ### View to send the verification code in the email ###
 class VerifyEmailView(APIView):
