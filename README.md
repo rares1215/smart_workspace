@@ -37,7 +37,14 @@ The system ensures **secure authentication**, **email verification**, **high per
 
 ### 🔐 Authentication & Security
 - JWT authentication (SimpleJWT)
-- Email verification with expiring numeric codes
+- Access & Refresh tokens are stored in HttpOnly cookies
+- Custom login endpoint issues JWT tokens via cookies
+- Logout endpoint clears authentication cookies
+- Backend fully controls token lifecycle
+- Email verification with expiring numeric codes:
+    - Are hashed before storage
+    - Expire automatically in 10 minutes
+    - Can only be used once
 - Account activation required before login
 - Secure password validation
 - Per-endpoint rate limiting
