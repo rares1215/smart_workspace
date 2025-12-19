@@ -88,7 +88,7 @@ const LoginPage = () => {
                     </button>
 
                     <div>
-                        <p className="opacity-50 text-center">Don't Have an account? Register <a className="" href="/register/">here!</a></p>
+                        <p className="opacity-50 text-center">Don't Have an account? Register <a href="/register/">here!</a></p>
                     </div>
                 </form>
 
